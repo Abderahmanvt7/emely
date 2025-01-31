@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "771204595815",
+    "project_id": "emely-93065",
+    "storage_bucket": "emely-93065.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:771204595815:android:986723ffdd333d41d154c2",
+        "android_client_info": {
+          "package_name": "com.example.emely"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_9sp2Ej1xGu9O2Hy1aq89qD95LjcC-3g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
