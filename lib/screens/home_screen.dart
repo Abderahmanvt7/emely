@@ -1,35 +1,62 @@
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final List<Map<String, String>> announcements = [
+    {
+      'photo': 'https://picsum.photos/300/200',
+      'titre': 'Annonce 1',
+      'nom': 'John Doe',
+      'age': '25'
+    },
+    {
+      'photo': 'https://picsum.photos/300/200',
+      'titre': 'Annonce 2',
+      'nom': 'Jane Smith',
+      'age': '30'
+    },
+    {
+      'photo': 'https://picsum.photos/300/200',
+      'titre': 'Annonce 3',
+      'nom': 'Ahmed Ali',
+      'age': '35'
+    },
+  ];
+
+  String searchQuery = '';
+  List<Map<String, String>> filteredAnnouncements = [];
+
+  @override
+  void initState() {
+    super.initState();
+    filteredAnnouncements = announcements; // Initially, show all announcements
+  }
+
+  void updateSearchQuery(String query) {
+    setState(() {
+      searchQuery = query;
+      filteredAnnouncements = announcements
+          .where((announcement) =>
+              announcement['titre']!
+                  .toLowerCase()
+                  .contains(query.toLowerCase()) ||
+              announcement['nom']!
+                  .toLowerCase()
+                  .contains(query.toLowerCase()) ||
+              announcement['age']!.contains(query))
+          .toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Dummy data for announcements
-    final List<Map<String, String>> announcements = [
-      {
-        'photo': 'https://picsum.photos/300/200',
-        'titre': 'Annonce 1',
-        'nom': 'John Doe',
-        'age': '25'
-      },
-      {
-        'photo': 'https://picsum.photos/300/200',
-        'titre': 'Annonce 2',
-        'nom': 'Jane Smith',
-        'age': '30'
-      },
-      {
-        'photo': 'https://picsum.photos/300/200',
-        'titre': 'Annonce 3',
-        'nom': 'Ahmed Ali',
-        'age': '35'
-      },
-    ];
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Accueil'),
+        title: const Text('Emely'),
         actions: [
           IconButton(
             onPressed: () {
@@ -43,73 +70,57 @@ class HomeScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
+              onChanged: updateSearchQuery,
               decoration: InputDecoration(
                 hintText: 'Rechercher...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                filled: true,
-                fillColor: Colors.white,
+                border: InputBorder.none,
+                prefixIcon: Icon(Icons.search),
               ),
             ),
           ),
         ),
       ),
       body: ListView.builder(
-        itemCount: announcements.length,
+        itemCount: filteredAnnouncements.length,
         itemBuilder: (context, index) {
-          final announcement = announcements[index];
-
+          final announcement = filteredAnnouncements[index];
           return GestureDetector(
             onTap: () {
-              Navigator.pushNamed(context, '/announcementDetails',
-                  arguments: announcement);
+              Navigator.pushNamed(
+                context,
+                '/announcementDetails',
+                arguments: announcement,
+              );
             },
             child: Card(
-              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 3,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Image
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      topRight: Radius.circular(12),
-                    ),
-                    child: Image.network(
-                      announcement['photo']!,
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                    ),
+                  Image.network(
+                    announcement['photo']!,
+                    width: double.infinity,
+                    height: 200,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[200],
+                        height: 200,
+                        child: Icon(Icons.broken_image, size: 50),
+                      );
+                    },
                   ),
-                  // Texts
                   Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.all(8.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           announcement['titre']!,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Nom: ${announcement['nom']}',
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                        Text(
-                          'Âge: ${announcement['age']} ans',
-                          style: const TextStyle(fontSize: 14),
-                        ),
+                        Text('Nom: ${announcement['nom']}'),
+                        Text('Âge: ${announcement['age']}'),
                       ],
                     ),
                   ),
@@ -121,9 +132,9 @@ class HomeScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/createAnnouncement');
+          Navigator.pushNamed(context, '/create-announcement');
         },
-        child: const Icon(Icons.add),
+        child: Icon(Icons.add),
       ),
     );
   }
