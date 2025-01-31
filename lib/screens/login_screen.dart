@@ -44,17 +44,17 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   String _handleFirebaseError(dynamic error) {
-    // Map Firebase exceptions to user-friendly messages
-    switch (error.toString()) {
-      case '[firebase_auth/invalid-email]':
-        return 'L\'adresse e-mail est invalide.';
-      case '[firebase_auth/user-not-found]':
-        return 'Utilisateur introuvable.';
-      case '[firebase_auth/wrong-password]':
-        return 'Mot de passe incorrect.';
-      default:
-        return 'Une erreur est survenue. Veuillez réessayer.';
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
+        case 'invalid-email':
+          return 'L\'adresse e-mail est invalide.';
+        case 'invalid-credential':
+          return 'l\'adresse e-mail ou le mot de passe est incorrect.';
+        default:
+          return 'Une erreur est survenue. Veuillez réessayer.';
+      }
     }
+    return 'Une erreur est survenue. Veuillez réessayer.';
   }
 
   @override
