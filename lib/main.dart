@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
-import 'screens/signup_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/announcement_details_screen.dart';
 import 'screens/create_announcement_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await dotenv.load();
   runApp(MyApp());
 }
 
@@ -26,7 +28,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/profile': (context) => const ProfileScreen(),
         '/announcementDetails': (context) => const AnnouncementDetailsScreen(),
-        '/createAnnouncement': (context) => const CreateAnnouncementScreen(),
+        '/createAnnouncement': (context) => CreateAnnouncementScreen(),
       },
     );
   }

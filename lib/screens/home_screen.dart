@@ -132,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/create-announcement');
+          Navigator.pushNamed(context, '/createAnnouncement');
         },
         child: Icon(Icons.add),
       ),
