@@ -50,6 +50,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('announcements')
           // filter out canceled and found announcements
+          .where('is_canceled', isEqualTo: false)
+          .where('is_found', isEqualTo: false)
           .orderBy('createdAt',
               descending: true) // Added ordering by creation date
           .get();
