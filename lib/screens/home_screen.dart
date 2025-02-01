@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'announcement_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -6,34 +9,59 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<Map<String, String>> announcements = [
-    {
-      'photo': 'https://picsum.photos/300/200',
-      'titre': 'Annonce 1',
-      'nom': 'John Doe',
-      'age': '25'
-    },
-    {
-      'photo': 'https://picsum.photos/300/200',
-      'titre': 'Annonce 2',
-      'nom': 'Jane Smith',
-      'age': '30'
-    },
-    {
-      'photo': 'https://picsum.photos/300/200',
-      'titre': 'Annonce 3',
-      'nom': 'Ahmed Ali',
-      'age': '35'
-    },
-  ];
-
   String searchQuery = '';
-  List<Map<String, String>> filteredAnnouncements = [];
+  List<Map<String, dynamic>> announcements = [];
+  List<Map<String, dynamic>> filteredAnnouncements = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    filteredAnnouncements = announcements; // Initially, show all announcements
+    fetchAnnouncements();
+  }
+
+  Future<void> fetchAnnouncements() async {
+    try {
+      // Fetch data from Firestore
+      QuerySnapshot snapshot =
+          await FirebaseFirestore.instance.collection('announcements').get();
+
+      // Map Firestore documents to a list
+      final List<Map<String, dynamic>> loadedAnnouncements = snapshot.docs.map(
+        (doc) {
+          return {
+            'id': doc.id,
+            'imageUrl': doc['imageUrl'],
+            'titre': doc['titre'],
+            'nom': doc['nom'],
+            'description': doc['description'],
+            'age': doc['age'].toString(),
+            'contact': doc['contact'],
+            'dernier_date': doc['dernier_date'].toDate(),
+            'dernier_lieu': doc['dernier_lieu'],
+          };
+        },
+      ).toList();
+
+      print('Announcements loaded');
+      print(loadedAnnouncements);
+      print('Announcements count: ${loadedAnnouncements.length}');
+
+      setState(() {
+        announcements = loadedAnnouncements;
+        filteredAnnouncements = loadedAnnouncements;
+        isLoading = false;
+      });
+    } catch (error) {
+      setState(() {
+        isLoading = false;
+      });
+      print('error');
+      print(error);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load announcements')),
+      );
+    }
   }
 
   void updateSearchQuery(String query) {
@@ -41,13 +69,11 @@ class _HomeScreenState extends State<HomeScreen> {
       searchQuery = query;
       filteredAnnouncements = announcements
           .where((announcement) =>
-              announcement['titre']!
+              announcement['titre']
                   .toLowerCase()
                   .contains(query.toLowerCase()) ||
-              announcement['nom']!
-                  .toLowerCase()
-                  .contains(query.toLowerCase()) ||
-              announcement['age']!.contains(query))
+              announcement['nom'].toLowerCase().contains(query.toLowerCase()) ||
+              announcement['age'].contains(query))
           .toList();
     });
   }
@@ -80,56 +106,63 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      body: ListView.builder(
-        itemCount: filteredAnnouncements.length,
-        itemBuilder: (context, index) {
-          final announcement = filteredAnnouncements[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/announcementDetails',
-                arguments: announcement,
-              );
-            },
-            child: Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Image.network(
-                    announcement['photo']!,
-                    width: double.infinity,
-                    height: 200,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[200],
-                        height: 200,
-                        child: Icon(Icons.broken_image, size: 50),
-                      );
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          announcement['titre']!,
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : filteredAnnouncements.isEmpty
+              ? Center(child: Text('No announcements found'))
+              : ListView.builder(
+                  itemCount: filteredAnnouncements.length,
+                  itemBuilder: (context, index) {
+                    final announcement = filteredAnnouncements[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => AnnouncementDetailsScreen(
+                                    announcement: announcement,
+                                    currentUserId: FirebaseAuth
+                                        .instance.currentUser!.uid)));
+                      },
+                      child: Card(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Image.network(
+                              announcement['imageUrl'],
+                              width: double.infinity,
+                              height: 200,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey[200],
+                                  height: 200,
+                                  child: Icon(Icons.broken_image, size: 50),
+                                );
+                              },
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    announcement['titre'],
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  Text('Nom: ${announcement['nom']}'),
+                                  Text('Âge: ${announcement['age']}'),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        Text('Nom: ${announcement['nom']}'),
-                        Text('Âge: ${announcement['age']}'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+                      ),
+                    );
+                  },
+                ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(context, '/createAnnouncement');
