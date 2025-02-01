@@ -8,23 +8,51 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   String searchQuery = '';
   List<Map<String, dynamic>> announcements = [];
   List<Map<String, dynamic>> filteredAnnouncements = [];
   bool isLoading = true;
+  late RouteObserver<ModalRoute> routeObserver;
 
   @override
   void initState() {
     super.initState();
+    routeObserver = RouteObserver<ModalRoute>();
+    fetchAnnouncements();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Refetch when returning to this screen
     fetchAnnouncements();
   }
 
   Future<void> fetchAnnouncements() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
       // Fetch data from Firestore
-      QuerySnapshot snapshot =
-          await FirebaseFirestore.instance.collection('announcements').get();
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('announcements')
+          // filter out canceled and found announcements
+          .orderBy('createdAt',
+              descending: true) // Added ordering by creation date
+          .get();
 
       // Map Firestore documents to a list
       final List<Map<String, dynamic>> loadedAnnouncements = snapshot.docs.map(
@@ -39,28 +67,32 @@ class _HomeScreenState extends State<HomeScreen> {
             'contact': doc['contact'],
             'dernier_date': doc['dernier_date'].toDate(),
             'dernier_lieu': doc['dernier_lieu'],
+            'is_found': doc['is_found'],
+            'is_canceled': doc['is_canceled'],
+            'userId': doc['userId'],
+            'createdAt': doc['createdAt'].toDate(),
+            'updatedAt': doc['updatedAt'].toDate(),
           };
         },
       ).toList();
 
-      print('Announcements loaded');
-      print(loadedAnnouncements);
-      print('Announcements count: ${loadedAnnouncements.length}');
-
-      setState(() {
-        announcements = loadedAnnouncements;
-        filteredAnnouncements = loadedAnnouncements;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          announcements = loadedAnnouncements;
+          filteredAnnouncements = loadedAnnouncements;
+          isLoading = false;
+        });
+      }
     } catch (error) {
-      setState(() {
-        isLoading = false;
-      });
-      print('error');
-      print(error);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load announcements')),
-      );
+      print('Error fetching announcements: $error');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Échec du chargement des annonces')),
+        );
+      }
     }
   }
 
@@ -85,8 +117,10 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Emely'),
         actions: [
           IconButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/profile');
+            onPressed: () async {
+              await Navigator.pushNamed(context, '/profile');
+              // Refetch when returning from profile screen
+              fetchAnnouncements();
             },
             icon: const Icon(Icons.person),
           ),
@@ -97,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               onChanged: updateSearchQuery,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Rechercher...',
                 border: InputBorder.none,
                 prefixIcon: Icon(Icons.search),
@@ -106,68 +140,80 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : filteredAnnouncements.isEmpty
-              ? Center(child: Text('No announcements found'))
-              : ListView.builder(
-                  itemCount: filteredAnnouncements.length,
-                  itemBuilder: (context, index) {
-                    final announcement = filteredAnnouncements[index];
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
+      body: RefreshIndicator(
+        onRefresh: fetchAnnouncements,
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : filteredAnnouncements.isEmpty
+                ? const Center(child: Text('Aucune annonce trouvée'))
+                : ListView.builder(
+                    itemCount: filteredAnnouncements.length,
+                    itemBuilder: (context, index) {
+                      final announcement = filteredAnnouncements[index];
+                      return GestureDetector(
+                        onTap: () async {
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => AnnouncementDetailsScreen(
-                                    announcement: announcement,
-                                    currentUserId: FirebaseAuth
-                                        .instance.currentUser!.uid)));
-                      },
-                      child: Card(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Image.network(
-                              announcement['imageUrl'],
-                              width: double.infinity,
-                              height: 200,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.grey[200],
-                                  height: 200,
-                                  child: Icon(Icons.broken_image, size: 50),
-                                );
-                              },
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    announcement['titre'],
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  Text('Nom: ${announcement['nom']}'),
-                                  Text('Âge: ${announcement['age']}'),
-                                ],
+                              builder: (context) => AnnouncementDetailsScreen(
+                                announcement: announcement,
+                                currentUserId:
+                                    FirebaseAuth.instance.currentUser!.uid,
                               ),
                             ),
-                          ],
+                          );
+                          // Refetch when returning from details screen
+                          fetchAnnouncements();
+                        },
+                        child: Card(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Image.network(
+                                announcement['imageUrl'],
+                                width: double.infinity,
+                                height: 200,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[200],
+                                    height: 200,
+                                    child: const Icon(Icons.broken_image,
+                                        size: 50),
+                                  );
+                                },
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      announcement['titre'],
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text('Nom: ${announcement['nom']}'),
+                                    Text('Âge: ${announcement['age']}'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/createAnnouncement');
+        onPressed: () async {
+          await Navigator.pushNamed(context, '/createAnnouncement');
+          // Refetch when returning from create announcement screen
+          fetchAnnouncements();
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

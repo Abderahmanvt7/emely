@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -7,6 +8,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CreateAnnouncementScreen extends StatefulWidget {
   @override
@@ -87,6 +89,11 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         'dernier_date': selectedDate,
         'contact': contactController.text,
         'imageUrl': imageUrl,
+        'is_found': false,
+        'is_canceled': false,
+        'createdAt': DateTime.now(),
+        'updatedAt': DateTime.now(),
+        'userId': FirebaseAuth.instance.currentUser!.uid,
       });
 
       // set the isUploading to false

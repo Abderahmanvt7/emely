@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
       home: const AuthGate(),
       routes: {
         '/profile': (context) => const ProfileScreen(),
-        '/announcementDetails': (context) => const AnnouncementDetailsScreen(),
+        // '/announcementDetails': (context) => AnnouncementDetailsScreen(),
         '/createAnnouncement': (context) => CreateAnnouncementScreen(),
       },
     );
