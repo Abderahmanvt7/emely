@@ -37,7 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _logout() async {
     await _auth.signOut();
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    Navigator.pushNamed(context, '/login');
   }
 
   @override

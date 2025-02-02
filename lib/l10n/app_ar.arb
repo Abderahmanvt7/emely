@@ -51,5 +51,12 @@
     "lastDateRequired": "آخر مرة تمت فيها رؤيته مطلوب.",
     "contactRequired": "رقم التواصل مطلوب.",
     "pickImage": "اختر صورة",
-    "noImageSelected": "لم يتم تحديد صورة."
+    "noImageSelected": "لم يتم تحديد صورة.",
+    "editAnnouncement": "تعديل الإعلان",
+    "updateAnnouncement": "تحديث الإعلان",
+    "announcementUpdatedSuccessfully": "تم تحديث الإعلان بنجاح.",
+    "errorUpdatingAnnouncement": "فشل تحديث الإعلان.",
+    "cantLaunchPhone": "فشل فتح الرقم في تطبيق الهاتف، قم بنسخ الرقم والإتصال",
+    "phoneError": "فشل فتح الرقم في تطبيق الهاتف، قم بنسخ الرقم والإتصال",
+    "phoneNumber": "رقم الهاتف"
 }

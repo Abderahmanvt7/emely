@@ -15,6 +15,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String _errorMessage = '';
 
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   void _loginUser() async {
     if (_formKey.currentState!.validate()) {
@@ -104,14 +105,27 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 10),
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: localization!.password ?? 'Mot de passe',
+                    labelText: localization.password ?? 'Mot de passe',
                     prefixIcon: Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                     border: OutlineInputBorder(),
                   ),
-                  obscureText: true,
+                  obscureText: _obscurePassword,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return localization!.enterValidPassword ??
+                      return localization.enterValidPassword ??
                           'Please enter your password.';
                     }
                     return null;

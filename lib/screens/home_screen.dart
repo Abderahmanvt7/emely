@@ -121,7 +121,31 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.appTitle ?? 'Emely'),
+        title: Row(
+          mainAxisSize:
+              MainAxisSize.min, // This prevents row from taking full width
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Image.asset(
+                'assets/images/emely_logo.png',
+                width: 40,
+                height: 40,
+                // Add error handler to help debug asset loading issues
+                errorBuilder: (context, error, stackTrace) {
+                  print('Error loading image: $error');
+                  return Icon(Icons.error);
+                },
+              ),
+            ),
+            Flexible(
+              child: Text(
+                AppLocalizations.of(context)!.appTitle ?? 'Emely',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             onPressed: () async {
