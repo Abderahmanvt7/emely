@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'announcement_details_screen.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -86,13 +87,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         });
       }
     } catch (error) {
-      print('Error fetching announcements: $error');
       if (mounted) {
         setState(() {
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Échec du chargement des annonces')),
+          SnackBar(
+              content: Text(
+                  AppLocalizations.of(context)!.announcementsFetchFailed ??
+                      'Échec de récupération des annonces')),
         );
       }
     }
@@ -114,9 +117,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Emely'),
+        title: Text(AppLocalizations.of(context)!.appTitle ?? 'Emely'),
         actions: [
           IconButton(
             onPressed: () async {
@@ -133,8 +138,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               onChanged: updateSearchQuery,
-              decoration: const InputDecoration(
-                hintText: 'Rechercher...',
+              decoration: InputDecoration(
+                hintText: localizations!.search,
                 border: InputBorder.none,
                 prefixIcon: Icon(Icons.search),
               ),
@@ -147,7 +152,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : filteredAnnouncements.isEmpty
-                ? const Center(child: Text('Aucune annonce trouvée'))
+                ? Center(
+                    child: Text(localizations!.noAnnouncements ??
+                        'Aucune annonce trouvée'))
                 : ListView.builder(
                     itemCount: filteredAnnouncements.length,
                     itemBuilder: (context, index) {
@@ -197,8 +204,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text('Nom: ${announcement['nom']}'),
-                                    Text('Âge: ${announcement['age']}'),
+                                    Text(
+                                        '${localizations!.name}: ${announcement['nom']}'),
+                                    Text(
+                                        '${localizations!.age}: ${announcement['age']}'),
                                   ],
                                 ),
                               ),

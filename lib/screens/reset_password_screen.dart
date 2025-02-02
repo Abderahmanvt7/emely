@@ -2,34 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class SignupScreen extends StatefulWidget {
+class ResetPasswordScreen extends StatefulWidget {
   @override
-  _SignupScreenState createState() => _SignupScreenState();
+  _ResetPasswordScreenState createState() => _ResetPasswordScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _auth = FirebaseAuth.instance;
   final _formKey = GlobalKey<FormState>();
   String email = '';
-  String password = '';
-  String confirmPassword = '';
 
-  bool isLoading = false;
-
-  void signUp() async {
+  void resetPassword() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        isLoading = true;
-      });
       try {
-        await _auth.createUserWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
+        await _auth.sendPasswordResetEmail(email: email);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text(AppLocalizations.of(context)!.accountCreatedSuccessfully),
+            content: Text(AppLocalizations.of(context)!.passwordResetEmailSent),
             backgroundColor: Colors.green,
           ),
         );
@@ -41,10 +30,6 @@ class _SignupScreenState extends State<SignupScreen> {
             backgroundColor: Colors.red,
           ),
         );
-      } finally {
-        setState(() {
-          isLoading = false;
-        });
       }
     }
   }
@@ -65,7 +50,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    localization!.createAnAccount,
+                    localization!.resetPassword,
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -85,56 +70,29 @@ class _SignupScreenState extends State<SignupScreen> {
                     validator: (value) =>
                         value!.isEmpty ? localization.enterValidEmail : null,
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    decoration: InputDecoration(
-                      labelText: localization.password,
-                      prefixIcon: Icon(Icons.lock),
-                      border: OutlineInputBorder(),
-                    ),
-                    obscureText: true,
-                    onChanged: (value) => password = value,
-                    validator: (value) => value!.length < 6
-                        ? localization.passwordShouldBeLongerThanSixCharacters
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    decoration: InputDecoration(
-                      labelText: localization.confirmPassword,
-                      prefixIcon: Icon(Icons.lock_outline),
-                      border: OutlineInputBorder(),
-                    ),
-                    obscureText: true,
-                    onChanged: (value) => confirmPassword = value,
-                    validator: (value) => value != password
-                        ? localization.passwordsDoNotMatch
-                        : null,
-                  ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: signUp,
+                    onPressed: resetPassword,
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            localization.createAnAccount,
-                            style: TextStyle(fontSize: 18),
-                          ),
+                    child: Text(
+                      localization.resetPassword,
+                      style: TextStyle(fontSize: 18),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   GestureDetector(
                     onTap: () =>
                         Navigator.pushReplacementNamed(context, '/login'),
                     child: Text(
-                      localization.alreadyHaveAnAccount,
+                      localization.backToLogin,
                       style: TextStyle(
                         color: Colors.blueAccent,
+                        decoration: TextDecoration.underline,
                         fontSize: 16,
                       ),
                       textAlign: TextAlign.center,

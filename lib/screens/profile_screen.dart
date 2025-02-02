@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:emely/providers/locale_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -9,7 +12,6 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late User user;
-  String selectedLanguage = 'Français';
 
   @override
   void initState() {
@@ -24,6 +26,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void changeLanguage(String language) {
+    final provider = Provider.of<LocaleProvider>(context, listen: false);
+    if (language == 'Arabe') {
+      provider.setLocale(const Locale('ar'));
+    } else {
+      provider.setLocale(const Locale('fr'));
+    }
+  }
+
   void _logout() async {
     await _auth.signOut();
     Navigator.of(context).popUntil((route) => route.isFirst);
@@ -31,9 +42,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    String selectedLocale = Localizations.localeOf(context).languageCode;
+    String selectedLanguage = selectedLocale == 'ar' ? 'Arabe' : 'Français';
+    final localization = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profil'),
+        title: Text(localization!.profile),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -47,12 +62,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             SizedBox(height: 16),
-            Text('Email: ${user.email}', style: TextStyle(fontSize: 18)),
+            Text('${localization!.email}: ${user.email}',
+                style: TextStyle(fontSize: 18)),
             Divider(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Langage:', style: TextStyle(fontSize: 16)),
+                Text(localization!.language, style: TextStyle(fontSize: 16)),
                 DropdownButton<String>(
                   value: selectedLanguage,
                   items: ['Arabe', 'Français'].map((String language) {
@@ -62,24 +78,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   }).toList(),
                   onChanged: (newValue) {
-                    setState(() {
-                      selectedLanguage = newValue!;
-                    });
+                    if (newValue != null) {
+                      changeLanguage(newValue);
+                    }
                   },
                 ),
               ],
             ),
             Divider(),
             ListTile(
-              title: Text('Changer le mot de passe',
+              title: Text(localization!.changePassword,
                   style: TextStyle(fontSize: 18)),
               trailing: Icon(Icons.arrow_forward_ios),
               onTap: _changePassword,
             ),
             Divider(),
             ListTile(
-              title: Text('Déconnexion',
-                  style: TextStyle(fontSize: 18, color: Colors.red)),
+              title: Text(localization!.logout,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.red,
+                  )),
               trailing: Icon(Icons.logout, color: Colors.red),
               onTap: _logout,
             ),
@@ -118,7 +137,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         await user.updatePassword(newPasswordController.text);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Mot de passe changé avec succès')),
+          SnackBar(
+              content: Text(
+                  AppLocalizations.of(context)!.passwordChangedSuccessfully)),
           // navigate back to profile screen
         );
         Navigator.pop(context);
@@ -127,7 +148,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         if (e is FirebaseAuthException) {
           if (e.code == 'invalid-credential') {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Mot de passe actuel incorrect')),
+              SnackBar(
+                  content: Text(
+                      AppLocalizations.of(context)!.currentPasswordIncorrect)),
             );
           }
         }
@@ -137,9 +160,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Changer le mot de passe'),
+        title: Text(localization!.changePassword),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -150,10 +174,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               TextFormField(
                 controller: currentPasswordController,
                 obscureText: true,
-                decoration: InputDecoration(labelText: 'Mot de passe actuel'),
+                decoration:
+                    InputDecoration(labelText: localization!.currentPassword),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer votre mot de passe actuel';
+                    return localization.currentPasswordRequired;
                   }
                   return null;
                 },
@@ -162,13 +187,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               TextFormField(
                 controller: newPasswordController,
                 obscureText: true,
-                decoration: InputDecoration(labelText: 'Nouveau mot de passe'),
+                decoration:
+                    InputDecoration(labelText: localization!.newPassword),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer un nouveau mot de passe';
+                    return localization.newPasswordRequired;
                   }
                   if (value.length < 6) {
-                    return 'Le mot de passe doit contenir au moins 6 caractères';
+                    return localization.passwordShouldBeLongerThanSixCharacters;
                   }
                   return null;
                 },
@@ -176,7 +202,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _changePassword,
-                child: Text('Changer le mot de passe'),
+                child: Text(localization.changePassword),
               ),
             ],
           ),

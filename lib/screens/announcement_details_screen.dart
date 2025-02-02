@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class AnnouncementDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> announcement;
@@ -32,6 +33,8 @@ class AnnouncementDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Détail de l\'annonce'),
@@ -60,27 +63,27 @@ class AnnouncementDetailsScreen extends StatelessWidget {
             Divider(height: 30, thickness: 2),
             ListTile(
               leading: Icon(Icons.person),
-              title: Text('Nom:'),
+              title: Text(localizations!.name + ':'),
               subtitle: Text(announcement['nom']),
             ),
             ListTile(
               leading: Icon(Icons.cake),
-              title: Text('Âge:'),
+              title: Text(localizations.age + ':'),
               subtitle: Text('${announcement['age']} ans'),
             ),
             ListTile(
               leading: Icon(Icons.location_on),
-              title: Text('Dernier Lieu:'),
+              title: Text(localizations.lastLocation + ':'),
               subtitle: Text(announcement['dernier_lieu']),
             ),
             ListTile(
               leading: Icon(Icons.calendar_today),
-              title: Text('Dernière Date:'),
+              title: Text(localizations.lastDate + ':'),
               subtitle: Text(announcement['dernier_date'].toString()),
             ),
             ListTile(
               leading: Icon(Icons.description),
-              title: Text('Description:'),
+              title: Text(localizations.description + ':'),
               subtitle: Text(announcement['description']),
             ),
             SizedBox(height: 20),
@@ -90,7 +93,8 @@ class AnnouncementDetailsScreen extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: () => _launchCaller(announcement['contact']),
                   icon: Icon(Icons.phone),
-                  label: Text('Contacter'),
+                  label: Text(localizations.contact,
+                      style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 12),
                   ),
@@ -108,7 +112,7 @@ class AnnouncementDetailsScreen extends StatelessWidget {
                         Navigator.pop(context)
                       },
                       icon: Icon(Icons.check_circle),
-                      label: Text('J\'ai trouvé',
+                      label: Text(localizations!.iFoundIt,
                           style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
@@ -126,7 +130,7 @@ class AnnouncementDetailsScreen extends StatelessWidget {
                         Navigator.pop(context)
                       },
                       icon: Icon(Icons.cancel),
-                      label: Text('Annuler l\'annonce',
+                      label: Text(localizations.cancelAonnonce,
                           style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,

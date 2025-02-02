@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class CreateAnnouncementScreen extends StatefulWidget {
   @override
@@ -60,7 +61,6 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       final data = json.decode(responseString);
       return data['data']['url'];
     } else {
-      print('Upload failed');
       return '';
     }
   }
@@ -102,7 +102,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       });
       // Show a success message
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Annonce enregistrée avec succès!'),
+          content: Text(
+              AppLocalizations.of(context)!.announcementCreatedSuccessfully),
           backgroundColor: Colors.green));
 
       // Clear the fields
@@ -136,8 +137,10 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: Text("Créer une annonce")),
+      appBar: AppBar(title: Text(localization!.createAnnouncement)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -146,58 +149,63 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             children: [
               TextFormField(
                 controller: titleController,
-                decoration: InputDecoration(labelText: 'Titre'),
+                decoration:
+                    InputDecoration(labelText: localization!.title + ' : '),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer un titre';
+                    return localization.titleRequired;
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: nameController,
-                decoration: InputDecoration(labelText: 'Nom'),
+                decoration:
+                    InputDecoration(labelText: localization!.name + ' : '),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer un nom';
+                    return localization.nameRequired;
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: ageController,
-                decoration: InputDecoration(labelText: 'Âge'),
+                decoration:
+                    InputDecoration(labelText: localization!.age + ' : '),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer un âge';
+                    return localization.ageRequired;
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
+                decoration: InputDecoration(
+                    labelText: localization!.description + ' : '),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer une description';
+                    return localization.descriptionRequired;
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: lastLocationController,
-                decoration: InputDecoration(labelText: 'Dernier Lieu'),
+                decoration: InputDecoration(
+                    labelText: localization!.lastLocation + ' : '),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer un lieu';
+                    return localization.lastLocationRequired;
                   }
                   return null;
                 },
               ),
               Row(
                 children: [
-                  Text('Dernière Date: '),
+                  Text(localization!.lastDate + ' : '),
                   Text("${selectedDate.toLocal()}".split(' ')[0]),
                   IconButton(
                     icon: Icon(Icons.calendar_today),
@@ -207,10 +215,11 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
               ),
               TextFormField(
                 controller: contactController,
-                decoration: InputDecoration(labelText: 'Contact'),
+                decoration:
+                    InputDecoration(labelText: localization!.contact + ' : '),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer un contact';
+                    return localization.contactRequired;
                   }
                   return null;
                 },
@@ -218,11 +227,11 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: pickImage,
-                child: Text('Choisir une photo'),
+                child: Text(localization!.pickImage),
               ),
               imageFile != null
                   ? Image.file(imageFile!)
-                  : Text('Aucune photo choisie'),
+                  : Text(localization!.noImageSelected),
               SizedBox(height: 20),
               isUploading
                   ? Center(
@@ -230,7 +239,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                           CircularProgressIndicator()) // Show loading spinner
                   : ElevatedButton(
                       onPressed: saveAnnouncement,
-                      child: Text('Enregistrer'),
+                      child: Text(localization!.createAnnouncement),
                     ),
             ],
           ),
