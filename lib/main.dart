@@ -5,7 +5,6 @@ import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/profile_screen.dart';
-import 'screens/announcement_details_screen.dart';
 import 'screens/create_announcement_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -26,7 +25,7 @@ class MyApp extends StatelessWidget {
       // Show a loading screen while checking authentication
       home: const AuthGate(),
       routes: {
-        '/profile': (context) => const ProfileScreen(),
+        '/profile': (context) => ProfileScreen(),
         // '/announcementDetails': (context) => AnnouncementDetailsScreen(),
         '/createAnnouncement': (context) => CreateAnnouncementScreen(),
       },
