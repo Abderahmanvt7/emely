@@ -3,6 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:emely/providers/locale_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -11,12 +16,48 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  File? imageFile;
+  String? imageUrl;
+
+  final ImagePicker picker = ImagePicker();
+
   late User user;
 
   @override
   void initState() {
     super.initState();
     user = _auth.currentUser!;
+  }
+
+  Future<void> pickImage() async {
+    final XFile? pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50, // Optional, adjust image quality
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<String> uploadImageToImgBB(String imagePath) async {
+    String apiKey = dotenv.env['IMGBB_API_KEY'] ??
+        ''; // Retrieve API key from .env// this is only for testing purpose
+    var uri = Uri.parse('https://api.imgbb.com/1/upload?key=$apiKey');
+
+    var request = http.MultipartRequest('POST', uri);
+    request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+
+    var response = await request.send();
+    if (response.statusCode == 200) {
+      final responseString = await response.stream.bytesToString();
+      final data = json.decode(responseString);
+      return data['data']['url'];
+    } else {
+      return '';
+    }
   }
 
   void _changePassword() {
@@ -40,6 +81,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.pushNamed(context, '/login');
   }
 
+  void _changeProfilePicture() async {
+    await pickImage();
+    if (imageFile != null) {
+      String uploadedImageUrl = await uploadImageToImgBB(imageFile!.path);
+      if (uploadedImageUrl.isNotEmpty) {
+        setState(() {
+          imageUrl = uploadedImageUrl;
+        });
+        await user.updatePhotoURL(imageUrl!);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     String selectedLocale = Localizations.localeOf(context).languageCode;
@@ -56,9 +110,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(
-              child: CircleAvatar(
-                radius: 40,
-                child: Icon(Icons.person, size: 50),
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundImage: imageFile != null
+                        ? FileImage(imageFile!) as ImageProvider
+                        : user.photoURL != null
+                            ? NetworkImage(user.photoURL!)
+                            : null,
+                    child: imageFile == null && user.photoURL == null
+                        ? Icon(Icons.person, size: 50)
+                        : null,
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      width: 40,
+                      height: 40,
+                      child: IconButton(
+                        icon: Icon(Icons.edit, color: Colors.white, size: 20),
+                        onPressed: _changeProfilePicture,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             SizedBox(height: 16),
